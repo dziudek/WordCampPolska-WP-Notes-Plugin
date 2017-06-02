@@ -21,7 +21,9 @@ if (!defined('WPINC')) {
 
 require plugin_dir_path(__FILE__) . 'class-rest-controller.php';
 
-// Register Custom Post Type
+/**
+ * Create Custom Post Type dedicated for application
+ */
 function dziudek_wp_notes_cpt() {
     $labels = array(
         'name'                  => _x( 'Notes', 'Post Type General Name', 'dziudek_wp_notes_cpt' ),
@@ -81,12 +83,23 @@ function dziudek_wp_notes_cpt() {
 
 add_action( 'init', 'dziudek_wp_notes_cpt', 0 );
 
+/**
+ * Prepare wp_notes endpoint
+ */
 function dziudek_wp_notes_use_raw_content( $data, $post, $request ) {
+    // Remove unused data to decrease response size
     unset($data->data['content']['rendered']);
     unset($data->data['title']['rendered']);
+
+    // Add field with plain text of the post content (Markdown does not like <p>, <br> tags)
     $data->data['content']['plaintext'] = $post->post_content;
+
+    // Add field with plain text of the post title (without "Private: " prefix)
     $data->data['title']['plaintext'] = $post->post_title;
+
+    // Change string with date into JS-compatible timestamp in UTC time
     $data->data['modified_gmt'] = strtotime($post->post_modified_gmt . ' UTC') * 1000;
+
     return $data;
 }
 
